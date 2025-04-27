@@ -1,13 +1,13 @@
 import os
 import sys
 import unittest
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from main import is_valid_name
 
-class TestNameValidation(unittest.TestCase):
 
+class TestNameValidation(unittest.TestCase):
     def test_valid_names(self):
-        """Проверяем корректные имена."""
         self.assertEqual(is_valid_name("Report one"), "Report one")
         self.assertEqual(is_valid_name("Report"), "Report")
 
@@ -17,5 +17,6 @@ class TestNameValidation(unittest.TestCase):
         self.assertEqual(is_valid_name("Report #123"), "")
         self.assertEqual(is_valid_name(""), "")  # Пустая строка
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     unittest.main()

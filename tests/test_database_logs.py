@@ -1,11 +1,12 @@
 import os
 import sys
 import unittest
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from main import DatabaseLogs
 
-class TestDatabaseLogs(unittest.TestCase):
 
+class TestDatabaseLogs(unittest.TestCase):
     def setUp(self):
         self.db_logs = DatabaseLogs()
 
@@ -27,5 +28,5 @@ class TestDatabaseLogs(unittest.TestCase):
         self.assertEqual(self.db_logs.get_total_count(), 2)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()
