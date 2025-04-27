@@ -2,7 +2,7 @@ import os
 import sys
 import unittest
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from tempfile import NamedTemporaryFile, template
+from tempfile import NamedTemporaryFile
 from main import read_logs_to_list
 
 
