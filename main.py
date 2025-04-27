@@ -4,13 +4,13 @@ import re
 import sqlite3
 from terminaltables import DoubleTable
 import argparse
+from typing import List, Tuple, Optional, Any
 
 
 class DatabaseLogs:
-    def __init__(self):
+    def __init__(self) -> None:
         self.connection = sqlite3.connect(":memory:")
         self.cursor = self.connection.cursor()
-
         self.cursor.execute("""
             CREATE TABLE logs (
                 id INTEGER PRIMARY KEY,
@@ -19,14 +19,16 @@ class DatabaseLogs:
             )
         """)
 
-    def get_total_count(self):
+    def get_total_count(self) -> int:
         try:
-            self.cursor.execute("SELECT COUNT(*) AS total_records FROM logs")
-            return self.cursor.fetchone()[0]
+            self.cursor.execute('SELECT COUNT(*) AS total_records FROM logs')
+            result = self.cursor.fetchone()
+            return result[0] if result is not None else 0  # Возвращаем 0, если результата нет
         except Exception as e:
             print(f"Ошибка при добавлении имени: {e}")
+            return 0  # Возвращаем 0 в случае ошибки
 
-    def add_loglevel(self, log_level, api):
+    def add_loglevel(self, log_level, api) -> None:
         try:
             self.cursor.execute(
                 "INSERT INTO logs (log_level, api) VALUES (?,?)", (log_level, api)
@@ -35,11 +37,11 @@ class DatabaseLogs:
         except Exception as e:
             print(f"Ошибка при добавлении имени: {e}")
 
-    def get_all(self):
+    def get_all(self) -> List[Tuple[int, str, str]]:
         self.cursor.execute("SELECT * FROM logs")
         return self.cursor.fetchall()
 
-    def get_report(self):
+    def get_report(self) -> List[Tuple[str, int, int, int, int, int]]:
         self.cursor.execute(
             """
             SELECT 
@@ -59,11 +61,11 @@ class DatabaseLogs:
         )
         return self.cursor.fetchall()
 
-    def close(self):
+    def close(self) -> None:
         self.connection.close()
 
 
-def is_valid_name(name):
+def is_valid_name(name) -> str:
     pattern = r"^[A-Za-z0-9\s]+$"
     if re.match(pattern, name):
         return name
@@ -71,11 +73,11 @@ def is_valid_name(name):
         return ""
 
 
-def file_exists(path):
+def file_exists(path) -> bool:
     return os.path.isfile(path)
 
 
-def parse_arguments():
+def parse_arguments() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Анализ журнала логирования django-приложения"
     )
@@ -92,17 +94,17 @@ def parse_arguments():
     return args
 
 
-def get_only_api(data):
+def get_only_api(data) -> str:
     position1 = data.find("/")
     position2 = len(data) - data[::-1].find("/")
     return data[position1:position2]
 
 
-def contains_substring(main_string, substring):
+def contains_substring(main_string, substring) -> bool:
     return main_string.find(substring) != -1
 
 
-def convert_log(log_record):
+def convert_log(log_record) -> str:
     template = "django.request"
     if contains_substring(log_record, "000"):
         if template in log_record:
@@ -112,7 +114,7 @@ def convert_log(log_record):
     return ""
 
 
-def read_logs_to_list(file_path):
+def read_logs_to_list(file_path) -> List[str]:
     try:
         with open(file_path, "r") as file:
             records = file.readlines()
@@ -122,7 +124,7 @@ def read_logs_to_list(file_path):
         return []
 
 
-def show_table(db: DatabaseLogs, count: int, title: str):
+def show_table(db: DatabaseLogs, count: int, title: str) -> None:
     report = db.get_report()
     table = [["HANDLER", "DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]]
     sum_debug = sum_info = sum_warning = sum_error = sum_critical = 0
