@@ -1,11 +1,9 @@
 import logging
 import os
 import re
-from os import path
 import sqlite3
 from terminaltables import DoubleTable
 import argparse
-from urllib.parse import urlsplit, urljoin
 
 
 class DatabaseLogs:
@@ -63,7 +61,7 @@ class DatabaseLogs:
         self.connection.close()
 
 def is_valid_name(name):
-    pattern = r'^[A-Za-z0-9]+$'
+    pattern = r'^[A-Za-z0-9\s]+$'
     if re.match(pattern, name):
         return name
     else:
@@ -95,16 +93,17 @@ def get_only_api(data):
     position2 = len(data) - data[::-1].find('/')
     return data[position1:position2]
 
+def contains_substring(main_string, substring):
+    return main_string.find(substring) != -1
 
 def convert_log(log_record):
     template = 'django.request'
-    if template in log_record:
-        correct_rec = log_record.split('000')[1]
-        correct_rec = correct_rec.split(template)
-        return correct_rec[0].strip() + ' ' + get_only_api(correct_rec[1])
-    else:
-        return ''
-
+    if contains_substring(log_record, '000'):
+        if template in log_record:
+            correct_rec = log_record.split('000')[1]
+            correct_rec = correct_rec.split(template)
+            return correct_rec[0].strip() + ' ' + get_only_api(correct_rec[1])
+    return ''
 
 def read_logs_to_list(file_path):
     try:
@@ -115,7 +114,7 @@ def read_logs_to_list(file_path):
         print(f"Произошла ошибка: {e}")
         return []
 
-def show_table(report:list, count:int, title:str):
+def show_table(db: DatabaseLogs, count: int, title: str):
     report = db.get_report()
     table = [['HANDLER', 'DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL']]
     sum_debug = sum_info = sum_warning = sum_error = sum_critical = 0
@@ -136,17 +135,19 @@ def show_table(report:list, count:int, title:str):
     print()
     print(table_instance.table)
 
-
-if __name__ == '__main__':
+def main():
     logging.basicConfig(
         level=logging.INFO,
         format='%(filename)s:%(lineno)d - %(levelname)-8s - %(message)s'
     )
-    logger = logging.getLogger(__name__)
-    base_dir = path.dirname(path.abspath(__file__))
     parsed_arguments = parse_arguments()
     logging.info(f"Запуск программы {parsed_arguments.report}")
-    os.system('clear')
+
+    if os.name == 'posix':
+        os.system('clear')  # Unix
+    else:
+        os.system('cls')  # Windows
+
     db = DatabaseLogs()
     try:
         for log_file in parsed_arguments.log_files:
@@ -158,10 +159,13 @@ if __name__ == '__main__':
                     db.add_loglevel(db_rec[0], db_rec[1])
             else:
                 logging.error(f"Файл '{log_file}' не найден.")
-
-        show_table(db.get_report(), db.get_total_count(), parsed_arguments.report)
+        show_table(db, db.get_total_count(), parsed_arguments.report)
 
     except Exception as ex:
         print(f"Ошибка {ex}")
-    db.close()
+    finally:
+        db.close()
+
+if __name__ == '__main__':
+    main()
 
